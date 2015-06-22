@@ -12,7 +12,10 @@ search against either an E. Coli or Human database.
 
 raw_files_dir = os.path.join('..', 'qeplus', "instrument_data")
 results_dir = os.path.join('..', 'qeplus')
-log = os.path.join('..', 'qeplus', 'web', 'run.log')
+web_dir = os.path.join('..', 'qeplus', 'web')
+if not os.path.isdir(web_dir):
+    os.makedirs(web_dir)
+log = os.path.join(web_dir, 'run.log')
 
 logging.basicConfig(
     level=logging.INFO, 
