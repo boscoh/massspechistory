@@ -1,0 +1,30 @@
+Description	Type	Amino Acid Residue	Monoisotopic Mass Shift (Da)	Average Mass Shift (Da)	Default	Notes
+carbamidomethylation of C	amino acid residue	C	57.02146373	57.05132	fixed	CH3NO
+oxidation of M	amino acid residue	M	15.99491463	15.9994	variable	O
+acetylation of protein N-terminus	protein N-terminus	n/a	42.01056469	42.03668	none	C2H2O
+phosphorylation of S	amino acid residue	S	79.96633092	79.979902	none	HPO3
+phosphorylation of T	amino acid residue	T	79.96633092	79.979902	none	HPO3
+phosphorylation of Y	amino acid residue	Y	79.96633092	79.979902	none	HPO3
+deamidation of N	amino acid residue	N	0.9840155927	0.98476	none	H-1N-1O
+deamidation of Q	amino acid residue	Q	0.9840155927	0.98476	none	H-1N-1O
+pyro-cmC	peptide N-terminus	C	-17.0265491015	-17.03052	none	H-3N-1
+pyro-E	peptide N-terminus	E	-18.0105646942	-18.01528	none	H-2O-1
+pyro-Q	peptide N-terminus	Q	-17.0265491015	-17.03052	none	H-3N-1
+AlkC	amino acid residue	C	57.02146373	57.05132	fixed	CH3NO
+Ox	amino acid residue	M	15.99491463	15.9994	variable	O
+N-Prot-Ac	protein N-terminus	n/a	42.01056469	42.03668	none	C2H2O
+S-Ph	amino acid residue	S	79.96633092	79.979902	none	HPO3
+T-Ph	amino acid residue	T	79.96633092	79.979902	none	HPO3
+Y-Ph	amino acid residue	Y	79.96633092	79.979902	none	HPO3
+De-N	amino acid residue	N	0.984015593	0.98476	none	H-1N-1O
+De-Q	amino acid residue	Q	0.984015593	0.98476	none	H-1N-1O
+N-DiMet	peptide N-terminus	n/a	28.0313	28.0532	none	C4H2
+K-DiMet	amino acid residue	K	28.0313	28.0532	none	C4H2
+N-HDiMet	peptide N-terminus	n/a	34.063117	34.0631	none	13C4H2
+K-HDiMet	amino acid residue	K	34.063117	34.0631	none	13C4H2
+Ub	amino acid residue	K	114.042927	114.1026	none	C4H6N2O2
+N-Ub	peptide N-terminus	n/a	114.042927	114.1026	none	C4H6N2O2
+K8	amino acid residue	K	8.014199	7.9427	none	13C6-C615N2-N2
+R10	amino acid residue	K	10.008269	9.9296	none	13C6-C615N4-N4
+N+6-HDiMet	peptide N-terminus	n/a	6.031817	6.0099	none	13C4H2-C4H2
+K+6-HDiMet	amino acid residue	K	6.031817	6.0099	none	13C4H2-C4H2

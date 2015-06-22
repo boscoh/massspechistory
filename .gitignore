@@ -1,0 +1,8 @@
+test-morpheus
+masspechistory/*pyc
+masspechistory/*/*pyc
+*pyc
+archive 
+batch 
+db
+web
