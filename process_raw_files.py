@@ -14,10 +14,13 @@ raw_files_dir = os.path.join('..', 'qeplus', "instrument_data")
 results_dir = os.path.join('..', 'qeplus')
 log = os.path.join('..', 'qeplus', 'web', 'run.log')
 
-logging.basicConfig(filename=log,level=logging.INFO)
-logger = logging.getLogger('process_raw_files')
+logging.basicConfig(
+    level=logging.INFO, 
+    filename="../qeplus/web/run.log",
+    format='%(asctime)s|%(name)s|%(levelname)s|%(message)s',
+    datefmt='%Y-%m-%d|%H:%M:%S')
 
-logger.info('>>> Checking raw files on ' + str(datetime.now()))
+logging.info('>>> Run Morpheus search on raw files')
 
 for morpheus_dir, regex, db in [
         ('ecoli_morpheus', r'(E|e)coli*\d{12}', "E_coli_uniprot_iRT.fasta"), 
