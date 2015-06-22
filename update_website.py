@@ -160,7 +160,10 @@ data_dir = "../qeplus"
 web_dir = "../qeplus/web"
 target_web_dir = '../web'
 logging.basicConfig(
-    level=logging.INFO, filename="../qeplus/web/run.log")
+    level=logging.INFO, 
+    filename="../qeplus/web/run.log",
+    format='%(asctime)s|%(name)s|%(levelname)s|%(message)s',
+    datefmt='%Y-%m-%d|%H:%M:%S')
 logging.getLogger().addHandler(logging.StreamHandler())
 recipients = [
     'apposite@gmail.com', 
