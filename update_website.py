@@ -24,7 +24,7 @@ def make_chart_data(data_dir, website_dir):
     logging.info(">>> Making chart data")
     if not os.path.isdir(website_dir):
         os.makedirs(website_dir)
-    datafile.copy_dir('template.web', website_dir)
+    datafile.copy_dir('massspechistory/template.web', website_dir)
 
     charts = []
 
