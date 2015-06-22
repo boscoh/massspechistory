@@ -176,7 +176,8 @@ recipients = [
 find_top_peptides(data_dir, web_dir)
 make_chart_data(data_dir, web_dir)
 check_timepoints_for_outliers( web_dir, recipients)
-datafile.copy_dir(web_dir, target_web_dir)
+if os.path.isdir(target_web_dir):
+    datafile.copy_dir(web_dir, target_web_dir)
 
 
 
