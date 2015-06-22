@@ -159,6 +159,8 @@ def check_timepoints_for_outliers(website_dir, recipients=[]):
 data_dir = "../qeplus"
 web_dir = "../qeplus/web"
 target_web_dir = '../web'
+if not os.path.isdir(web_dir):
+    os.makedirs(web_dir)
 logging.basicConfig(
     level=logging.INFO, 
     filename="../qeplus/web/run.log",
@@ -171,8 +173,6 @@ recipients = [
     # 'robert.goode@monash.edu', 
     # 'ralf.schittenhelm@monash.edu'
 ]
-if not os.path.isdir(web_dir):
-    os.makedirs(web_dir)
 find_top_peptides(data_dir, web_dir)
 make_chart_data(data_dir, web_dir)
 check_timepoints_for_outliers( web_dir, recipients)
