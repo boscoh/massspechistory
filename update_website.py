@@ -87,9 +87,19 @@ def make_chart_data(data_dir, website_dir):
         'iRT Peptides Retention Width', 
         'Width of the peak associated at the retention time'))
 
-    jsonp_fname = os.path.join(website_dir, 'load_charts.jsonp')
-    datafile.write_jsonp(charts, jsonp_fname, 'load_charts')
+    datafile.write_jsonp(
+        charts, 
+        os.path.join(website_dir, 'load_charts.jsonp'),
+        'load_charts')
 
+    datafile.write_jsonp(
+        { 
+            'title': 'QE-PLUS+', 
+            'description': 'Monash Proteomics Facility. '
+                'Thermo Q-Exactive Plus',
+        },
+        os.path.join(website_dir, 'load_title.jsonp'),
+        'load_title')
 
 
 def check_timepoints_for_outliers(website_dir, recipients=[]):

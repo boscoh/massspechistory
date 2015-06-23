@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
+    <meta content='width=device-width, initial-scale=1.0' name='viewport' />
     <script src='jquery/jquery-2.1.3.min.js'></script>
     
     <link href="supplescroll.inc/supplescroll.css" rel="stylesheet"/>
@@ -19,6 +19,7 @@
             font-size: 14px;
             line-height: 1.5em;
             letter-spacing: 0.05em;
+            color: #666;
         }
         html, body {
             margin: 0px;
@@ -29,7 +30,6 @@
         h1, h2, h3, h3, h4, h5, h6, h7 {
             font-size: 14px;
             text-transform: uppercase;
-            color: #666;
             margin: 0;
             margin-top: 4em;
             margin-bottom: 0em;
@@ -39,13 +39,22 @@
         }
         h1 {
             font-size: 25px;
-            margin-top: 120px;
+            margin-top: 60px;
             margin-bottom: 10px;
         }
         h2 {
           font-size: 16px;
         }
+        #big-container {
+            display: flex;
+            display: -webkit-flex;
+            flex-direction: column;
+            -webkit-flex-direction: column;
+            height: 100%;
+        }
         #container {
+            flex: 1;
+            -webkit-flex: 1;
             display: flex;
             display: -webkit-flex;
             flex-direction: row;
@@ -58,6 +67,10 @@
             overflow: auto;
             width: 250px;
             border-right: 1px solid #CCC;
+            padding-top: 0px;
+            padding-bottom: 50px;
+            padding-left: 20px;
+            padding-right: 20px;
             padding: 20px 50px 0px 20px;
         }
         #main-text {
@@ -68,7 +81,7 @@
             overflow: auto;
 
             padding-left: 20px;
-            padding-right: 50px;
+            padding-right: 20px;
 
         }
         #table-of-contents .toc a.active {
@@ -97,16 +110,55 @@
             fill-opacity: 1;
             stroke-opacity: 1;
         }
+
+        #navbar {
+            overflow: hidden;
+            width: 100%;
+            border-bottom: 1px solid #CCC;
+        }
+        #toc-trigger {
+            float: left;
+            cursor: pointer;
+        }
+        #breadcrumb {
+            float: left;
+            height: 30px;
+            margin-top: 20px;
+        }
+        #hamburger {
+            font-size: 3em;
+            padding: 20px 20px;
+        }
+
+        @media screen and (max-width: 800px) {
+            #table-of-contents {
+                width: 0;
+                padding-left: 0px;
+                padding-right: 0px;
+            }
+        }
+
+
     </style>
 </head>
 <body>
 
-<div id="container">
-    <div class="touchscroll" id="table-of-contents"></div>
-    <div class="touchscroll" id="main-text">
-        <div class="relative_position">
-            <h1>QE-Plus</h1>
-            <div id="charts"> 
+<div id="big-container">
+    <div id="navbar">
+        <div id="toc-trigger">
+            <div id="hamburger">&#9776;</div>
+        </div>
+        <div id="breadcrumb"></div>
+        <br clear="all"/>
+    </div>
+
+    <div id="container">
+        <div class="touchscroll" id="table-of-contents"></div>
+        <div class="touchscroll" id="main-text">
+            <div class="relative_position">
+                <h1 id="title">QE-Plus</h1>
+                <div id="description"></div>
+                <div id="charts"></div>
             </div>
         </div>
     </div>
@@ -131,7 +183,6 @@
             .x(function(d, i) { return d[0] })
             .y(function(d, i) { return d[1] })
             .color(d3.scale.category10().range())
-/*            .interactive(false);*/
 
         chart.xAxis
             .tickFormat(xtick)
@@ -157,7 +208,37 @@
         nv.addGraph(function() { return chart });
     }
 
-    
+    is_active_trigger_toc = function() {
+      return trigger.hasClass('active');
+    }
+
+    toggle_trigger = function() {
+      if (is_active_trigger_toc()) {
+        trigger.removeClass('active');
+      } else {
+        trigger.addClass('active');
+      }
+    }
+
+    function trigger_toc() {
+        console.log("trigger" + is_active_trigger_toc())
+        toggle_trigger()
+        if (is_active_trigger_toc()) {
+          move_css = {"width": 0, "padding-left":0, "padding-right":0}
+        }
+        else {
+          move_css = {"width": 250, "padding-left":20, "padding-right":20}
+        }
+        toc.animate(move_css, 300)
+    }
+
+    function load_title(data) {
+        $("#title").text(data.title);
+        document.title = data.title;
+        $("#breadcrumb").text(data.title);
+        $("#description").text(data.description);
+    }
+
     function load_charts(data) {
 
         $.each(data, function(i, chart) {
@@ -178,6 +259,11 @@
     }
 
     load_script('load_charts.jsonp')
+    load_script('load_title.jsonp')
+    trigger = $('#toc-trigger');
+    toc = $('#table-of-contents');
+    trigger.click(trigger_toc)
+
 
 </script>
 
