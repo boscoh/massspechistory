@@ -8,10 +8,14 @@
     <script src="supplescroll.inc/supplescroll.js" type="text/javascript"></script>
     <script src="supplescroll.inc/jquery.scrollTo.js" type="text/javascript"></script>
 
-    <script src="d3/d3.min.js" charset="utf-8"></script>
-    <link href="nvd3/nv.d3.min.css" rel="stylesheet" type="text/css">
-    <script src="nvd3/nv.d3.min.js"></script>
-
+    <script type="text/javascript"
+          src="https://www.google.com/jsapi?autoload={
+            'modules':[{
+              'name':'visualization',
+              'version':'1',
+              'packages':['corechart']
+            }]
+          }"></script>
 
     <style>
         body {
@@ -126,7 +130,7 @@
             margin-top: 20px;
         }
         #hamburger {
-            font-size: 2em;
+            font-size: 3em;
             padding: 20px 20px;
         }
 
@@ -179,33 +183,45 @@
     }
 
     function add_chart(data, selector) {
-        chart = nv.models.lineWithFocusChart()
-            .x(function(d, i) { return d[0] })
-            .y(function(d, i) { return d[1] })
-            .color(d3.scale.category10().range())
 
-        chart.xAxis
-            .tickFormat(xtick)
-            .showMaxMin(false);
-        chart.yAxis
-            .tickFormat(d3.format(',.f'))
-            .showMaxMin(false);
+        var temp_dict = {};
+        var keys = ['date'];
+        var x_vals = [];
+        $.each(data, function(i_chart, chart_data) {
+            keys.push(chart_data.key);
+            $.each(chart_data.values, function(i, values) {
+                if (!(i in temp_dict)) {
+                    temp_dict[i] = [new Date(i)];
+                    x_vals.push(i);
+                }
+                temp_dict[i].push(values[1]);
+            });
+        });
 
-        chart.x2Axis
-            .tickFormat(xtick)
-            .showMaxMin(false);
-        chart.y2Axis
-            .tickFormat(d3.format(',.f'))
-            .showMaxMin(false);
-  
-        d3.select(selector)
-            .datum(data)
-            .transition().duration(100)
-            .call(chart);
-  
-        nv.utils.windowResize(chart.update);
-  
-        nv.addGraph(function() { return chart });
+        var google_data = [keys];
+        $.each(x_vals, function(i_val, i) {
+            google_data.push(temp_dict[i]);
+        });       
+
+        console.log(google_data);
+
+        //   ['Year', 'Sales', 'Expenses'],
+        //   ['2004',  1000,      400],
+        //   ['2005',  1170,      460],
+        //   ['2006',  660,       1120],
+        //   ['2007',  1030,      540]
+
+        var chart = new google.visualization.LineChart(
+            document.getElementById(selector));
+
+        chart.draw(
+            google.visualization.arrayToDataTable(google_data), 
+            {
+              title: '',
+              curveType: 'line',
+              legend: { position: 'bottom' }
+            }
+        );
     }
 
     is_active_trigger_toc = function() {
@@ -245,11 +261,13 @@
             var charts = $('#charts');
             charts.append('<h3>' + chart.title + '</h3>')
             charts.append('<p>' + chart.description + '</p>')
-            var svg = d3.select('#charts').append("svg");
-            svg.attr('id', 'chart'+i);
-            svg.attr('class', 'chart')
+            var div = 
+                $("<div>")
+                    .attr('id', 'chart'+i)
+                    .attr('class', 'chart');
+            $('#charts').append(div);
             console.log(chart.chart_data)
-            add_chart(chart.chart_data, '#charts #chart'+i);
+            add_chart(chart.chart_data, 'chart'+i);
         });
 
         supplescroll.init_touchscroll();
@@ -258,12 +276,15 @@
             '#main-text');
     }
 
-    load_script('load_charts.jsonp')
-    load_script('load_title.jsonp')
-    trigger = $('#toc-trigger');
-    toc = $('#table-of-contents');
-    trigger.click(trigger_toc)
+    function init() {
+        load_script('load_charts.jsonp')
+        load_script('load_title.jsonp')
+        trigger = $('#toc-trigger');
+        toc = $('#table-of-contents');
+        trigger.click(trigger_toc)
+    }
 
+    google.setOnLoadCallback(init);
 
 </script>
 

@@ -161,11 +161,11 @@ def glob_re(glob_tag, regex=None):
 
 
 def copy_dir(in_dir, out_dir):
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
     for f in glob.glob(os.path.join(in_dir, '*')):
         if os.path.isfile(f):
             shutil.copy(f, out_dir)
         else:
             target_dir = os.path.join(out_dir, os.path.basename(f))
-            if not os.path.isdir(target_dir):
-                os.makedirs(target_dir)
             copy_dir(f, target_dir)

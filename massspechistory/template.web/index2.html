@@ -8,10 +8,7 @@
     <script src="supplescroll.inc/supplescroll.js" type="text/javascript"></script>
     <script src="supplescroll.inc/jquery.scrollTo.js" type="text/javascript"></script>
 
-    <script src="d3/d3.min.js" charset="utf-8"></script>
-    <link href="nvd3/nv.d3.min.css" rel="stylesheet" type="text/css">
-    <script src="nvd3/nv.d3.min.js"></script>
-
+    <script src="canvasjs/canvasjs.min.js" type="text/javascript"></script>
 
     <style>
         body {
@@ -179,33 +176,39 @@
     }
 
     function add_chart(data, selector) {
-        chart = nv.models.lineWithFocusChart()
-            .x(function(d, i) { return d[0] })
-            .y(function(d, i) { return d[1] })
-            .color(d3.scale.category10().range())
+        var canvasjs_data = [];
+        $.each(data, function(i, chart_data) {
+            var this_canvasjs_data = {
+                'type': 'line',
+                'legendText': chart_data.key,
+                'showInLegend': true,
+                'dataPoints': []
+            }
+            $.each(chart_data.values, function(i, values) {
+                this_canvasjs_data.dataPoints.push({ 
+                    x: new Date(values[0]),
+                    y: values[1],
+                });
+            })
+            canvasjs_data.push(this_canvasjs_data);
+        });
+        var chart = new CanvasJS.Chart(
+            selector,
+            {
+                zoomEnabled: true,
+                panEnabled: true, 
+                legend: {
+                    horizontalAlign: "right",
+                    verticalAlign: "center"        
+                },
+                axisY:{
+                    includeZero: false
+                },
+                data: canvasjs_data,  // random generator below
+            }
+        );
 
-        chart.xAxis
-            .tickFormat(xtick)
-            .showMaxMin(false);
-        chart.yAxis
-            .tickFormat(d3.format(',.f'))
-            .showMaxMin(false);
-
-        chart.x2Axis
-            .tickFormat(xtick)
-            .showMaxMin(false);
-        chart.y2Axis
-            .tickFormat(d3.format(',.f'))
-            .showMaxMin(false);
-  
-        d3.select(selector)
-            .datum(data)
-            .transition().duration(100)
-            .call(chart);
-  
-        nv.utils.windowResize(chart.update);
-  
-        nv.addGraph(function() { return chart });
+        chart.render();
     }
 
     is_active_trigger_toc = function() {
@@ -245,11 +248,13 @@
             var charts = $('#charts');
             charts.append('<h3>' + chart.title + '</h3>')
             charts.append('<p>' + chart.description + '</p>')
-            var svg = d3.select('#charts').append("svg");
-            svg.attr('id', 'chart'+i);
-            svg.attr('class', 'chart')
+            var div = 
+                $("<div>")
+                    .attr('id', 'chart'+i)
+                    .attr('class', 'chart');
+            $('#charts').append(div);
             console.log(chart.chart_data)
-            add_chart(chart.chart_data, '#charts #chart'+i);
+            add_chart(chart.chart_data, 'chart'+i);
         });
 
         supplescroll.init_touchscroll();
