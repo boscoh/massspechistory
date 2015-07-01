@@ -13,8 +13,8 @@ from massspechistory import peptides
 
 
 def find_top_peptides(data_dir, web_dir):
-    logging.info(">>> Calculating 300 most common peptides in ecoli")
     for celltype in ['ecoli', 'hela']:
+        logging.info(">>> Calculating most common peptides in " + celltype)
         base = os.path.join(web_dir, '%s_top_peptides' % celltype)
         search_tag = os.path.join(data_dir, '%s_morpheus/*/*PSMs.tsv' % celltype)
         peptides.find_top_peptides(datafile.glob_re(search_tag), base, 300)
