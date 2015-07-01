@@ -26,16 +26,30 @@ logging.basicConfig(
 logging.info('>>> Run Morpheus search on raw files')
 
 for morpheus_dir, regex, db in [
-        ('ecoli_morpheus', r'(E|e)coli*\d{12}', "E_coli_uniprot_iRT.fasta"), 
-        ('hela_morpheus', r"(Hela|hela).*\d{12}", "HUMAN.fasta")]:
+
+        ('ecoli_morpheus', r'(E|e)coli*\d{12}', "db/E_coli_uniprot_iRT.fasta"), 
+        ('hela_morpheus', r"(Hela|hela).*\d{12}", "db/HUMAN.fasta")]:
+
     out_dir = os.path.join(results_dir, morpheus_dir)
+    out_dir_fn = lambda f: os.path.join(out_dir, datafile.get_base(f))
+
+    raw_files = os.path.join(raw_files_dir, "*.raw") 
+
     morpheus.batch(
-        datafile.glob_re(
-            os.path.join(raw_files_dir, "*.raw"),
-            regex),
-        os.path.join("db", db),
-        lambda f: os.path.join(out_dir, datafile.get_base(f)),
-        dummy=False,
+        datafile.glob_re(raw_files, regex),
+        out_dir_fn,
+        {
+            '-db': db, 
+            '-ad': 'true', 
+            '-mmu': 'true',
+            '-precmtv': '20',
+            '-precmtu': 'ppm',
+            '-prodmtv': '20',
+            '-prodmtu': 'ppm',
+            '-pmc': 'true',
+            '-minpmo': '-3',
+            '-maxpmo': '+1',
+        }
     )
 
 

@@ -48,7 +48,7 @@ Usage: morpheus.py [options]
   -precmtv    precursor_mass_tolerance_value [default: 2.1]
   -precmtu    precursor_mass_tolerance_units [default: Da]; or ppm
   -precmt     monoisotopic_precursor_mass_type [default: Monoisotopic]; or Average
-  -pmc        precursor_mono_correction [default: False]
+  -pmc        precursor_mono_correction [default: false]
   -minpmo     min_prec_mono_offset [default: -3]
   -maxpmo     max_prec_mono_offset [default: 1]
   -prodmtv    product_mass_tolerance_value [default: 0.025]
@@ -127,7 +127,7 @@ def run(options):
 
     option_str = ''
     for key in options:
-        option_str += ' %s %s' % (key, options[key])
+        option_str += ' %s \'%s\'' % (key, options[key])
 
     cmd = get_morpheus_bin(is_thermo) + ' ' + option_str
     logger.info("cmd: " + cmd)
@@ -156,8 +156,7 @@ def get_options(words):
     return options
 
 
-
-def batch(fnames, db, out_dir_fn, dummy=False):
+def batch(fnames, out_dir_fn, options={'-ad':'true','-mmu':'true'}, dummy=False):
     for fname in fnames:
         if not datafile.get_date_from_fname(fname):
             continue
@@ -173,13 +172,12 @@ def batch(fnames, db, out_dir_fn, dummy=False):
         try:
             if os.path.isdir(out_dir):
                 shutil.rmtree(out_dir)
-            run({
-                '-d': fname,
-                '-db': db,
-                '-ad': 'true',
-                '-mmu': 'true',
-                '-o': out_dir,
-            })
+            params = {
+              '-d': fname,
+              '-o': out_dir
+            }
+            params.update(options)
+            run(params)
         except KeyboardInterrupt:
             raise
         except:
