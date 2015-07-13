@@ -72,7 +72,7 @@ def get_date_from_fname(filename):
     strptime = datetime.datetime.strptime
     match = re.search("(\d{12})", filename)
     if match:
-        return strptime(match.groups()[0], '%y%m%d%H%M%S')
+        return strptime(match.groups()[-1], '%y%m%d%H%M%S')
     else:
         return None
 

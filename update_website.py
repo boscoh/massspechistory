@@ -11,58 +11,58 @@ from massspechistory import outliers
 from massspechistory import peptides
 
 
-
-def find_top_peptides(data_dir, web_dir):
-    for celltype in ['ecoli', 'hela']:
-        logging.info(">>> Calculating most common peptides in " + celltype)
-        base = os.path.join(web_dir, '%s_top_peptides' % celltype)
-        search_tag = os.path.join(data_dir, '%s_morpheus/*/*PSMs.tsv' % celltype)
-        peptides.find_top_peptides(datafile.glob_re(search_tag), base, 300)
+logger = logging.getLogger('update_website')
 
 
-def make_chart_data(data_dir, website_dir):
-    logging.info(">>> Making chart data")
+def make_chart_data(data_dir, website_dir, title, description):
     if not os.path.isdir(website_dir):
         os.makedirs(website_dir)
     datafile.copy_dir('massspechistory/template.web', website_dir)
 
     charts = []
 
-    for cell in ['Ecoli', 'Hela']:
-        morpheus_dir = os.path.join(data_dir, '%s_morpheus' % cell.lower())
-        morpheus_yaml = os.path.join(website_dir, '%s_msms.logs.yaml' % cell.lower())
-        logs = chart.parse_logs(
-            glob.glob(morpheus_dir + '/*/summary.tsv'),
-            chart.parse_morpheus_summary, 
-            morpheus_yaml)
-        charts.append(chart.make_chart(
-            logs, 
-            [['MS/MS Spectra', ['MS/MS Spectra']]], 
-            '%s MS/MS Spectra Count' % cell))
-        charts.append(chart.make_chart(
-            logs, 
-            [['Target PSMs', ['Target PSMs']]], 
-            '%s PSM Count' % cell))
-        charts.append(chart.make_chart(
-            logs, 
-            [['Unique Target Peptides', ['Unique Target Peptides']]], 
-            '%s Peptide Count' % cell))
-        charts.append(chart.make_chart(
-            logs, 
-            [['Target Protein Groups', ['Target Protein Groups']]], 
-            '%s Protein Count' % cell))
 
-        top_peptides = datafile.load_json(
-            os.path.join(website_dir, '%s_top_peptides.json'  % cell.lower()))
-        logs = chart.parse_logs(
-            glob.glob(morpheus_dir + '/*/*PSMs.tsv'),
-            lambda f: chart.parse_top_peptides_of_morpheus_psm(f, top_peptides), 
-            os.path.join(website_dir, '%s_top_peptides.logs.yaml' % cell.lower()))
-        charts.append(chart.make_chart(
-            logs, 
-            [['n_top_peptide', ['n_top_peptide']]], 
-            '%s Top 300 Peptide Count' % cell,
-            'Peptides matching the MS/MS ions of top 300 Peptides'))
+    morpheus_yaml = os.path.join(website_dir, 'msms.logs.yaml')
+    logs = chart.parse_logs(
+        glob.glob(
+            os.path.join(data_dir, '*_morpheus/*/summary.tsv')),
+        chart.parse_morpheus_summary, 
+        morpheus_yaml)
+
+    charts.append(chart.make_chart(
+        logs, 
+        [['Ecoli Spectra', ['Ecoli MS/MS Spectra']],
+         ['Hela Spectra', ['Hela MS/MS Spectra']]], 
+        'Digest MS/MS Identification Count'))
+    charts.append(chart.make_chart(
+        logs, 
+        [['Ecoli PSM', ['Ecoli Target PSMs']],
+         ['Hela PSM', ['Hela Target PSMs']]], 
+        'Digest Peptide-Spectrum-Match Count'))
+    charts.append(chart.make_chart(
+        logs, 
+        [['Ecoli Peptides', ['Ecoli Unique Target Peptides']],
+         ['Hela Peptides', ['Hela Unique Target Peptides']]], 
+        'Digest Peptide Count'))
+    charts.append(chart.make_chart(
+        logs, 
+        [['Ecoli Proteins', ['Ecoli Target Protein Groups']],
+         ['Hela Proteins', ['Hela Target Protein Groups']]], 
+        'Digest Protein Count'))
+
+
+    morpheus_yaml = os.path.join(website_dir, 'psm.logs.yaml')
+    logs = chart.parse_logs(
+        glob.glob(
+            os.path.join(data_dir, '*_morpheus/*/*PSMs.tsv')),
+        chart.parse_morpheus_psm, 
+        morpheus_yaml)
+    charts.append(chart.make_chart(
+        logs, 
+        [['Ecoli Mass Error', ['Ecoli Precursor Mass Error (Da)']],
+         ['Hela Mass Error', ['Hela Precursor Mass Error (Da)']]], 
+        'Average Absolute Precursor Mass Error [Da]'))
+
 
     logs = chart.parse_logs(
         datafile.glob_re(
@@ -81,11 +81,7 @@ def make_chart_data(data_dir, website_dir):
         chart.make_pep_id_params(pep_ids, 'Height'), 
         'iRT Peptides Peak Height', 
         'Height of the peak associated at the retention time'))
-    charts.append(chart.make_chart(
-        logs, 
-        chart.make_pep_id_params(pep_ids, 'Width'), 
-        'iRT Peptides Retention Width', 
-        'Width of the peak associated at the retention time'))
+
 
     datafile.write_jsonp(
         charts, 
@@ -93,17 +89,12 @@ def make_chart_data(data_dir, website_dir):
         'load_charts')
 
     datafile.write_jsonp(
-        { 
-            'title': 'QE-PLUS+', 
-            'description': 'Monash Proteomics Facility. '
-                'Thermo Q-Exactive Plus',
-        },
+        { 'title': title, 'description': description },
         os.path.join(website_dir, 'load_title.jsonp'),
         'load_title')
 
 
 def check_timepoints_for_outliers(website_dir, recipients=[]):
-    logging.info(">>> Checking outliers")
     if platform.system() == 'Windows':
         return
 
@@ -124,12 +115,6 @@ def check_timepoints_for_outliers(website_dir, recipients=[]):
         for params in params_list:
             outliers.set_lower_limit_of_param(
                 limit, params, cell + "_" + params[0], logs, timepoints)
-
-        logs = datafile.load_yaml(
-            os.path.join(
-                website_dir, '%s_top_peptides.logs.yaml' % cell))
-        outliers.set_lower_limit_of_param(
-            limit, ['n_top_peptide'], cell + "_" + 'n_top_peptide', logs, timepoints)
 
     logs = datafile.load_yaml(
         os.path.join(website_dir, 'irt_peptides.logs.yaml'))
@@ -166,28 +151,37 @@ def check_timepoints_for_outliers(website_dir, recipients=[]):
 
 # Main Loop
 
-data_dir = "../qeplus"
-web_dir = "../qeplus/web"
-log = "../qeplus/web/run.log"
-recipients = [
-    'apposite@gmail.com', 
-    # 'oded.kleifeld@monash.edu', 
-    # 'robert.goode@monash.edu', 
-    # 'ralf.schittenhelm@monash.edu'
-]
+for instrument, description in [
+        ('qeplus', 'Monash Proteomics Facility. Thermo QExactive Plus'),
+        ('qeclassic', 'Monash Proteomics Facility. Thermo QExactive')
+        ]:
+    data_dir = "../" + instrument
+    web_dir = "../%s/web" % instrument
+    log = "../%s/web/run.log" % instrument
+    recipients = [
+        'apposite@gmail.com', 
+        # 'oded.kleifeld@monash.edu', 
+        # 'robert.goode@monash.edu', 
+        # 'ralf.schittenhelm@monash.edu'
+    ]
 
-if not os.path.isdir(web_dir):
-    os.makedirs(web_dir)
-logging.basicConfig(
-    level=logging.INFO, 
-    filename=log,
-    format='%(asctime)s|%(name)s|%(levelname)s|%(message)s',
-    datefmt='%Y-%m-%d|%H:%M:%S')
-logging.getLogger().addHandler(logging.StreamHandler())
+    if not os.path.isdir(web_dir):
+        os.makedirs(web_dir)
 
-find_top_peptides(data_dir, web_dir)
-make_chart_data(data_dir, web_dir)
-check_timepoints_for_outliers( web_dir, recipients)
+    logging.basicConfig(
+        level=logging.INFO, 
+        filename=log,
+        format='%(asctime)s|%(name)s|%(levelname)s|%(message)s',
+        datefmt='%Y-%m-%d|%H:%M:%S')
 
+    # logging.getLogger().addHandler(logging.StreamHandler())
+
+    logger.info("Making chart data for " + instrument)
+
+    make_chart_data(data_dir, web_dir, instrument, description)
+    # check_timepoints_for_outliers( web_dir, recipients)
+
+    root = logging.getLogger()
+    map(root.removeHandler, root.handlers[:])
 
 

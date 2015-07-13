@@ -130,7 +130,7 @@
             margin-top: 20px;
         }
         #hamburger {
-            font-size: 3em;
+            font-size: 2em;
             padding: 20px 20px;
         }
 
@@ -184,32 +184,42 @@
 
     function add_chart(data, selector) {
 
-        var temp_dict = {};
         var keys = ['date'];
-        var x_vals = [];
+        var dates = [];
         $.each(data, function(i_chart, chart_data) {
             keys.push(chart_data.key);
             $.each(chart_data.values, function(i, values) {
-                if (!(i in temp_dict)) {
-                    temp_dict[i] = [new Date(i)];
-                    x_vals.push(i);
+                var date = values[0];
+                if (dates.indexOf(date) < 0) {
+                    dates.push(date);
                 }
-                temp_dict[i].push(values[1]);
             });
         });
 
+        var n_chart = keys.length - 1;
+    
+        dates.sort();
+        var n_date = dates.length;
+
         var google_data = [keys];
-        $.each(x_vals, function(i_val, i) {
-            google_data.push(temp_dict[i]);
+        var i_date_from_date = {}
+        $.each(dates, function(i_date, date) {
+            var values = [];
+            values.push(new Date(date));
+            for (var j=0; j<n_chart; j+=1) {
+                values.push(null);
+            }
+            i_date_from_date[date] = i_date+1;
+            google_data.push(values);
         });       
 
-        console.log(google_data);
-
-        //   ['Year', 'Sales', 'Expenses'],
-        //   ['2004',  1000,      400],
-        //   ['2005',  1170,      460],
-        //   ['2006',  660,       1120],
-        //   ['2007',  1030,      540]
+        $.each(data, function(i_chart, chart_data) {
+            $.each(chart_data.values, function(i, values) {
+                date = values[0];
+                var i_date = i_date_from_date[date];
+                google_data[i_date][i_chart+1] = values[1];
+            });
+        });
 
         var chart = new google.visualization.LineChart(
             document.getElementById(selector));
@@ -266,7 +276,6 @@
                     .attr('id', 'chart'+i)
                     .attr('class', 'chart');
             $('#charts').append(div);
-            console.log(chart.chart_data)
             add_chart(chart.chart_data, 'chart'+i);
         });
 

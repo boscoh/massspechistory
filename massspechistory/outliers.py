@@ -36,14 +36,17 @@ def set_lower_limit_of_param(limit, params, name, logs, timepoints):
         except:
             values.append(None)
 
-    # first pass, includes outliers
-    avg, std = datafile.get_avg_std(
-        [v for v in values if v != None])
+    try:
+        # first pass, includes outliers
+        avg, std = datafile.get_avg_std(
+            [v for v in values if v != None])
 
-    # remove outliers
-    lower_limit = avg - std
-    avg, std = datafile.get_avg_std(
-        [v for v in values if v != None and v > lower_limit])
+        # remove outliers
+        lower_limit = avg - std
+        avg, std = datafile.get_avg_std(
+            [v for v in values if v != None and v > lower_limit])
+    except:
+        return
 
     limit[name] = {
         'avg': avg,

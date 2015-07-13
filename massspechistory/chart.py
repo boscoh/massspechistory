@@ -12,6 +12,7 @@ import os
 import glob
 import calendar
 import logging
+import pytz
 
 import datafile
 
@@ -21,12 +22,38 @@ logger = logging.getLogger('chart')
 
 def parse_morpheus_summary(fname):
     result = {}
+    if 'hela' in fname:
+        celltype = 'Hela'
+    elif 'ecoli' in fname:
+        celltype = 'Ecoli'
     for entry in datafile.read_csv(fname):
         for key, val in entry.items():
-            if key:
+            key = celltype + ' ' + key
+            if not key:
+                result[key] = None
+            else:
                 result[key] = datafile.parse_string(val)
         break
     return result
+
+
+def parse_morpheus_psm(fname):
+    if 'hela' in fname:
+        celltype = 'Hela'
+    elif 'ecoli' in fname:
+        celltype = 'Ecoli'
+    key = 'Precursor Mass Error (Da)'
+    values = []
+    for entry in datafile.read_csv(fname):
+        if key not in entry:
+            continue
+        values.append(abs(float(entry[key])))
+    if len(values) == 0:
+        return {}
+    else:
+        param = celltype + ' ' + key
+        avg, std = datafile.get_avg_std(values)
+        return { param: avg }
 
 
 def calculate_crt(peptides):
@@ -74,25 +101,6 @@ def parse_irt_log(fname):
     return log
 
 
-def parse_top_peptides_of_morpheus_psm(fname, top_peptides):
-    n_in_top_peptides = 0
-    seen_peptides = []
-    logger.debug("Comparing top peptides at %s" % datafile.get_date_from_fname(fname))
-    for entry in datafile.read_csv(fname):
-        seq = entry['Peptide Sequence']
-        if seq is None:
-            continue
-        fraction_intensity = float(entry['Fraction of Intensity Matching'])
-        fraction_ions = float(entry['Ratio of Matching Products'])
-        if seq in top_peptides and seq not in seen_peptides:
-            top_pep = top_peptides[seq]
-            if (fraction_intensity > top_pep['intensity_avg'] - 2*top_pep['intensity_stdv']) and \
-               (fraction_ions > top_pep['ion_avg'] - top_pep['ion_stdv']):
-               n_in_top_peptides += 1
-               seen_peptides.append(seq)
-    return {'n_top_peptide': n_in_top_peptides}
-
-
 def parse_logs(fnames, parse_fn, cache_yaml):
     if os.path.isfile(cache_yaml):
         logs = datafile.load_yaml(cache_yaml)
@@ -110,13 +118,13 @@ def parse_logs(fnames, parse_fn, cache_yaml):
             continue
 
         try:
-            log = parse_fn(fname)
-            log.update({
+            log = {
               'fname': fname,
               'timestamp': calendar.timegm(date.timetuple()),
               'iso_date_str': date.isoformat(),
-            })
+            }
             logs.append(log)
+            log.update(parse_fn(fname))
         except KeyboardInterrupt:
             raise
         except Exception as E:
@@ -147,9 +155,12 @@ def make_chart(logs, params, title, description=''):
         chart = { "key": name, "values": [] }
         for log in logs:
             try:
-                y = get_param(log, keys)
+                try:
+                    y = get_param(log, keys)
+                except:
+                    y = None
                 x = log['timestamp']*1000  # -> milliseconds for js 
-                chart['values'].append([x, y if y is not None else 0])
+                chart['values'].append([x, y])
             except:
                 pass
         result['chart_data'].append(chart)

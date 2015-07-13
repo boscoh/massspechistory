@@ -7,6 +7,7 @@ import sys
 import shutil
 import platform
 import logging
+import time
 
 import datafile
 
@@ -81,7 +82,7 @@ def get_modifications_tsv(is_thermo=False):
 def add_modifications(modifications_tsv, extra_modifications_tsv):
     mods = list(datafile.read_csv(modifications_tsv))
     default_mods = [mod['description'] for mod in mods]
-    logger.info("Adding %s to %s" % (extra_modifications_tsv, modifications_tsv))
+    logger.debug("Adding %s to %s" % (extra_modifications_tsv, modifications_tsv))
     new_mod_lines = []
     with open(extra_modifications_tsv) as f:
         for line in f.readlines()[1:]:
@@ -103,9 +104,6 @@ def run(options):
     is_thermo = False
     if '-d' in options:
         is_thermo = options['-d'].strip().lower().endswith('raw')
-
-    if is_thermo:
-        logger.info("Raw file input detected: switch to Windows morpheus_tmo_cl.exe")
 
     logger.debug("options: %s" % options)
 
@@ -130,7 +128,10 @@ def run(options):
         option_str += ' %s \'%s\'' % (key, options[key])
 
     cmd = get_morpheus_bin(is_thermo) + ' ' + option_str
-    logger.info("cmd: " + cmd)
+    prompt = "morpheus: "
+    if is_thermo:
+        prompt = "morpheus(raw): "
+    logger.info(prompt + datafile.get_base(options['-d']))
     os.system(cmd)
 
     if backup_modifications_tsv:
@@ -156,32 +157,53 @@ def get_options(words):
     return options
 
 
+def is_good_morpheus_output(out_dir):
+    fnames = os.listdir(out_dir)
+    is_summary = any('summary.tsv' in f for f in fnames)
+    is_psm = any('PSMs.tsv' in f for f in fnames)
+    return is_summary and is_psm and len(fnames) >= 6
+
+
 def batch(fnames, out_dir_fn, options={'-ad':'true','-mmu':'true'}, dummy=False):
     for fname in fnames:
         if not datafile.get_date_from_fname(fname):
             continue
         out_dir = out_dir_fn(fname)
         if os.path.isdir(out_dir):
-            n = len(os.listdir(out_dir))
-            if n >= 6:
+            if is_good_morpheus_output(out_dir):
                 logger.debug("Skipping " + datafile.get_base(out_dir))
                 continue
-        logger.info("Run morpheus on " + datafile.get_base(out_dir))
         if dummy:
             continue
         try:
+            start = time.time()
+
             if os.path.isdir(out_dir):
                 shutil.rmtree(out_dir)
+
             params = {
               '-d': fname,
               '-o': out_dir
             }
             params.update(options)
             run(params)
+
+            if not is_good_morpheus_output(out_dir):
+                raise Exception
+
+            end = time.time()
+            c = end - start
+
+            hours = c // 3600 % 24
+            minutes = c // 60 % 60
+            seconds = c % 60
+
+            logger.info("finished in %d:%02d:%04.1f" % (hours, minutes, seconds))
+
         except KeyboardInterrupt:
             raise
         except:
-            logger.error("Morpheus failed with " + datafile.get_base(out_dir))
+            logger.error("failed: " + datafile.get_base(out_dir))
 
 
 
