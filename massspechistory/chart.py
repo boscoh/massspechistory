@@ -28,11 +28,10 @@ def parse_morpheus_summary(fname):
         celltype = 'Ecoli'
     for entry in datafile.read_csv(fname):
         for key, val in entry.items():
-            key = celltype + ' ' + key
             if not key:
                 result[key] = None
             else:
-                result[key] = datafile.parse_string(val)
+                result[celltype + ' ' + key] = datafile.parse_string(val)
         break
     return result
 
@@ -42,18 +41,28 @@ def parse_morpheus_psm(fname):
         celltype = 'Hela'
     elif 'ecoli' in fname:
         celltype = 'Ecoli'
-    key = 'Precursor Mass Error (Da)'
     values = []
+    key = 'Precursor Mass Error (ppm)'
     for entry in datafile.read_csv(fname):
-        if key not in entry:
+        if entry['Target?'].lower() != "true":
             continue
-        values.append(abs(float(entry[key])))
+        if float(entry['Q-Value (%)']) > 1:
+            continue
+        value = float(entry[key])
+        if abs(value) > 20:
+            continue
+        values.append(value)
     if len(values) == 0:
         return {}
     else:
-        param = celltype + ' ' + key
+        average_param = celltype + ' ' + key
+        upper_param = celltype + ' ' + key + ' Upper'
         avg, std = datafile.get_avg_std(values)
-        return { param: avg }
+        result = {
+            average_param: avg,
+            upper_param: avg + std
+        }
+        return result
 
 
 def calculate_crt(peptides):
@@ -123,8 +132,9 @@ def parse_logs(fnames, parse_fn, cache_yaml):
               'timestamp': calendar.timegm(date.timetuple()),
               'iso_date_str': date.isoformat(),
             }
+            parsed_log = parse_fn(fname)
+            log.update(parsed_log)
             logs.append(log)
-            log.update(parse_fn(fname))
         except KeyboardInterrupt:
             raise
         except Exception as E:

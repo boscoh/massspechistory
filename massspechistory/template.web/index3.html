@@ -227,9 +227,13 @@
         chart.draw(
             google.visualization.arrayToDataTable(google_data), 
             {
-              title: '',
-              curveType: 'line',
-              legend: { position: 'bottom' }
+                title: '',
+                curveType: 'line',
+                explorer: {
+                    actions: ['dragToZoom', 'rightClickToReset'],
+                    keepInBounds: true
+                },
+                legend: { position: 'bottom' }
             }
         );
     }

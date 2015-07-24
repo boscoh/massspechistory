@@ -59,9 +59,11 @@ def make_chart_data(data_dir, website_dir, title, description):
         morpheus_yaml)
     charts.append(chart.make_chart(
         logs, 
-        [['Ecoli Mass Error', ['Ecoli Precursor Mass Error (Da)']],
-         ['Hela Mass Error', ['Hela Precursor Mass Error (Da)']]], 
-        'Average Absolute Precursor Mass Error [Da]'))
+        [['Ecoli Mass Error', ['Ecoli Precursor Mass Error (ppm)']],
+         ['Ecoli Mass Error Upper', ['Ecoli Precursor Mass Error (ppm) Upper']],
+         ['Hela Mass Error', ['Hela Precursor Mass Error (ppm)']], 
+         ['Hela Mass Error Upper', ['Hela Precursor Mass Error (ppm) Upper']]], 
+        'Precursor Mass Error [ppm]'))
 
 
     logs = chart.parse_logs(
@@ -152,8 +154,8 @@ def check_timepoints_for_outliers(website_dir, recipients=[]):
 # Main Loop
 
 for instrument, description in [
+        ('qeclassic', 'Monash Proteomics Facility. Thermo QExactive'),
         ('qeplus', 'Monash Proteomics Facility. Thermo QExactive Plus'),
-        ('qeclassic', 'Monash Proteomics Facility. Thermo QExactive')
         ]:
     data_dir = "../" + instrument
     web_dir = "../%s/web" % instrument

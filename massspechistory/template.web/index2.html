@@ -93,7 +93,7 @@
         }
         .chart {
             width: 100%;
-            height: 400px;
+            height: 250px;
         }
         svg {
             display: block;
@@ -199,10 +199,26 @@
                 panEnabled: true, 
                 legend: {
                     horizontalAlign: "center",
-                    verticalAlign: "bottom"        
+                    verticalAlign: "bottom",        
+                    fontSize: 10,
+                    fontFamily: 'Arial',
                 },
-                axisY:{
-                    includeZero: false
+                axisY: { 
+                    labelFontSize: 10,
+                    labelFontFamily: 'Arial',
+                    includeZero: false,
+                    gridColor: "#EAEAEA",
+                    tickColor: "#EAEAEA",
+                    labelFontColor: "#999999",
+                    lineColor: "#EAEAEA",
+                },
+                axisX: { 
+                    labelFontSize: 10,
+                    labelFontFamily: 'Arial',
+                    gridColor: "#EAEAEA",
+                    tickColor: "#EAEAEA",
+                    labelFontColor: "#999999",
+                    lineColor: "#EAEAEA",
                 },
                 data: canvasjs_data,  // random generator below
             }
