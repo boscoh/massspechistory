@@ -7,7 +7,9 @@ manipulation routines
 import os
 import glob
 import re
-import datetime
+from datetime import datetime
+from pytz import timezone
+from pytz.reference import UTC
 import copy
 import json
 import csv
@@ -41,7 +43,9 @@ def load_yaml(cache_yaml):
 
 def load_cache_yaml(cache_yaml):
     if os.path.isfile(cache_yaml):
-        return load_yaml(cache_yaml)
+        result = load_yaml(cache_yaml)
+        if result is not None:
+            return result
     return {}
 
 
@@ -68,11 +72,20 @@ def get_base(fname):
     return os.path.splitext(os.path.basename(fname))[0]
 
 
-def get_date_from_fname(filename):
-    strptime = datetime.datetime.strptime
+def get_date_from_fname(filename, region='Australia/Melbourne'):
+    """
+    Returns a UTC date that is derived from the
+    location given in region. This allows proper UNIX
+    timestamps to be generated from the datetime object.
+    """
     match = re.search("(\d{12})", filename)
     if match:
-        return strptime(match.groups()[-1], '%y%m%d%H%M%S')
+        s = match.groups()[-1]
+        ints = [int(s[i:i+2]) for i in range(0, len(s), 2)]
+        ints[0] += 2000
+        unaware_date = datetime(*ints)
+        aware_date = timezone(region).localize(unaware_date)
+        return aware_date.astimezone(UTC)
     else:
         return None
 

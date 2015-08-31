@@ -81,10 +81,10 @@ def get_modifications_tsv(is_thermo=False):
 
 def add_modifications(modifications_tsv, extra_modifications_tsv):
     mods = list(datafile.read_csv(modifications_tsv))
-    default_mods = [mod['description'] for mod in mods]
+    default_mods = [mod['Description'] for mod in mods]
     logger.debug("Adding %s to %s" % (extra_modifications_tsv, modifications_tsv))
     new_mod_lines = []
-    with open(extra_modifications_tsv) as f:
+    with open(extra_modifications_tsv, 'Ur') as f:
         for line in f.readlines()[1:]:
             mod = line.split('\t')[0]
             if mod not in default_mods:
@@ -132,6 +132,7 @@ def run(options):
     if is_thermo:
         prompt = "morpheus(raw): "
     logger.info(prompt + datafile.get_base(options['-d']))
+    logger.debug(cmd)
     os.system(cmd)
 
     if backup_modifications_tsv:

@@ -8,7 +8,6 @@ import platform
 from massspechistory import chart
 from massspechistory import datafile
 from massspechistory import outliers
-from massspechistory import peptides
 
 
 logger = logging.getLogger('update_website')
@@ -33,22 +32,22 @@ def make_chart_data(data_dir, website_dir, title, description):
         logs, 
         [['Ecoli Spectra', ['Ecoli MS/MS Spectra']],
          ['Hela Spectra', ['Hela MS/MS Spectra']]], 
-        'Digest MS/MS Identification Count'))
+        'Digest MS/MS Spectra'))
     charts.append(chart.make_chart(
         logs, 
         [['Ecoli PSM', ['Ecoli Target PSMs']],
          ['Hela PSM', ['Hela Target PSMs']]], 
-        'Digest Peptide-Spectrum-Match Count'))
+        'Digest Peptide-Spectrum Matches'))
     charts.append(chart.make_chart(
         logs, 
         [['Ecoli Peptides', ['Ecoli Unique Target Peptides']],
          ['Hela Peptides', ['Hela Unique Target Peptides']]], 
-        'Digest Peptide Count'))
+        'Digest Unique Peptides'))
     charts.append(chart.make_chart(
         logs, 
         [['Ecoli Proteins', ['Ecoli Target Protein Groups']],
          ['Hela Proteins', ['Hela Target Protein Groups']]], 
-        'Digest Protein Count'))
+        'Digest Protein Groups'))
 
 
     morpheus_yaml = os.path.join(website_dir, 'psm.logs.yaml')
@@ -59,11 +58,11 @@ def make_chart_data(data_dir, website_dir, title, description):
         morpheus_yaml)
     charts.append(chart.make_chart(
         logs, 
-        [['Ecoli Mass Error', ['Ecoli Precursor Mass Error (ppm)']],
-         ['Ecoli Mass Error Upper', ['Ecoli Precursor Mass Error (ppm) Upper']],
-         ['Hela Mass Error', ['Hela Precursor Mass Error (ppm)']], 
-         ['Hela Mass Error Upper', ['Hela Precursor Mass Error (ppm) Upper']]], 
-        'Precursor Mass Error [ppm]'))
+        [['Ecoli dMass avg', ['Ecoli Precursor Mass Error (ppm)']],
+         ['Ecoli dMass avg+std', ['Ecoli Precursor Mass Error (ppm) Upper']],
+         ['Hela dMass avg', ['Hela Precursor Mass Error (ppm)']], 
+         ['Hela dMass avg+std', ['Hela Precursor Mass Error (ppm) Upper']]], 
+        'Digest Precursor dMass [ppm]'))
 
 
     logs = chart.parse_logs(
@@ -96,7 +95,7 @@ def make_chart_data(data_dir, website_dir, title, description):
         'load_title')
 
 
-def check_timepoints_for_outliers(website_dir, recipients=[]):
+def check_timepoints_for_outliers(website_dir, instrument, recipients=[]):
     if platform.system() == 'Windows':
         return
 
@@ -105,18 +104,21 @@ def check_timepoints_for_outliers(website_dir, recipients=[]):
 
     # Calculate limits for all variables
     limit = {}
-    for cell in ['ecoli', 'hela']:
-        logs = datafile.load_yaml(
-            os.path.join(website_dir, '%s_msms.logs.yaml' % cell))
-        params_list = [
-            ['MS/MS Spectra'], 
-            ['Target PSMs'], 
-            ['Unique Target Peptides'],
-            ['Target Protein Groups'],
-        ]
-        for params in params_list:
-            outliers.set_lower_limit_of_param(
-                limit, params, cell + "_" + params[0], logs, timepoints)
+    logs = datafile.load_yaml(
+        os.path.join(website_dir, 'msms.logs.yaml'))
+    params_list = [
+        ['Hela MS/MS Spectra'], 
+        ['Hela Target PSMs'], 
+        ['Hela Unique Target Peptides'],
+        ['Hela Target Protein Groups'],
+        ['Ecoli MS/MS Spectra'], 
+        ['Ecoli Target PSMs'], 
+        ['Ecoli Unique Target Peptides'],
+        ['Ecoli Target Protein Groups'],
+    ]
+    for params in params_list:
+        outliers.set_lower_limit_of_param(
+            limit, params, params[0], logs, timepoints)
 
     logs = datafile.load_yaml(
         os.path.join(website_dir, 'irt_peptides.logs.yaml'))
@@ -129,23 +131,24 @@ def check_timepoints_for_outliers(website_dir, recipients=[]):
     bad_times = []
     for time in sorted(timepoints.keys()):
         time_point = timepoints[time]
-        if not 'considered' in time_point:
-            bad_params = [p for p in time_point if not time_point[p]]
-            bad_pep_params = [p for p in bad_params if p.startswith("pep")]
-            if len(bad_pep_params) <= 3:
-                # if only 3 or less irt peptides are bad,
-                # consider okay and remove from bad_params
-                bad_params = [p for p in bad_params if not p.startswith("pep")] 
-            if bad_params:
-                bad_times.append(time)
-            time_point['considered'] = True
+        if 'considered' in time_point:
+            continue
+        bad_params = [p for p in time_point if not time_point[p]]
+        bad_pep_params = [p for p in bad_params if p.startswith("pep")]
+        if len(bad_pep_params) <= 3:
+            # if only 3 or less irt peptides are bad,
+            # consider okay and remove from bad_params
+            bad_params = [p for p in bad_params if not p.startswith("pep")] 
+        if bad_params:
+            bad_times.append(time)
+        time_point['considered'] = True
 
     # Send reports
     if bad_times:
-        message = outliers.bad_times_message(bad_times, timepoints, limit)
+        message = outliers.bad_times_message(
+            instrument, bad_times, timepoints, limit)
         outliers.report_by_email(
-            message, 
-            recipients)
+            instrument, message, recipients)
 
     datafile.write_yaml(timepoints, timepoints_yaml)
 
@@ -156,16 +159,17 @@ def check_timepoints_for_outliers(website_dir, recipients=[]):
 for instrument, description in [
         ('qeclassic', 'Monash Proteomics Facility. Thermo QExactive'),
         ('qeplus', 'Monash Proteomics Facility. Thermo QExactive Plus'),
+        ('qeplus2', 'Monash Proteomics Facility. Thermo QExactive Plus'),
         ]:
     data_dir = "../" + instrument
     web_dir = "../%s/web" % instrument
     log = "../%s/web/run.log" % instrument
     recipients = [
         'apposite@gmail.com', 
-        # 'oded.kleifeld@monash.edu', 
-        # 'robert.goode@monash.edu', 
-        # 'ralf.schittenhelm@monash.edu'
-    ]
+        'oded.kleifeld@monash.edu', 
+        'robert.goode@monash.edu', 
+        'david.steer@monash.edu',
+   ]
 
     if not os.path.isdir(web_dir):
         os.makedirs(web_dir)
@@ -181,7 +185,7 @@ for instrument, description in [
     logger.info("Making chart data for " + instrument)
 
     make_chart_data(data_dir, web_dir, instrument, description)
-    # check_timepoints_for_outliers( web_dir, recipients)
+    check_timepoints_for_outliers(web_dir, instrument, recipients)
 
     root = logging.getLogger()
     map(root.removeHandler, root.handlers[:])
