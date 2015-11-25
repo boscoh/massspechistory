@@ -14,7 +14,7 @@ search against either an E. Coli or Human database.
 logger = logging.getLogger('process_raw_files')
 
 
-for instrument in ['qeclassic', 'qeplus']:
+for instrument in open('instruments.txt', 'Ur').read().split():
     raw_files_dir = os.path.join('..', instrument, "instrument_data")
     results_dir = os.path.join('..', instrument)
     web_dir = os.path.join('..', instrument, 'web')
@@ -57,6 +57,9 @@ for instrument in ['qeclassic', 'qeplus']:
                 '-pmc': 'true',
                 '-minpmo': '-3',
                 '-maxpmo': '+1',
+                '-vm': 'Ox',
+                '-fm': 'AlkC',
+                '-acs': 'false'
             }
         )
 

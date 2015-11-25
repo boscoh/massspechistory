@@ -5,7 +5,7 @@ import glob
 import logging
 import platform
 
-from massspechistory import chart
+from massspechistory import chart_iRTsumparse as chart
 from massspechistory import datafile
 from massspechistory import outliers
 
@@ -82,9 +82,11 @@ def make_chart_data(data_dir, website_dir, title, description):
             r'(Hela|hela|ecoli).*iRT'),
         chart.parse_irt_log, 
         os.path.join(website_dir, 'irt_peptides.logs.yaml'))
+#    print logs
     if len(logs) > 0:
-#        print logs[0].keys()
+        print logs[0].keys()
         pep_ids = logs[0]['peptides'].keys()
+        print pep_ids
         charts.append(chart.make_chart(
             logs, 
             chart.make_pep_id_params(pep_ids, 'RT'), 
@@ -95,6 +97,13 @@ def make_chart_data(data_dir, website_dir, title, description):
             chart.make_pep_id_params(pep_ids, 'Height'), 
             'iRT Peptides Peak Height', 
             'Height of the peak associated at the retention time'))
+
+        # System Suitability summary
+        charts.append(chart.make_chart(
+            logs,
+             chart.make_pep_id_params(pep_ids,['System Suitability','Fail_pc']),
+             'System suitability failure (%)',
+             'Percent of failure of system suitability tests'))
         charts.append(chart.make_chart(
             logs,
             [['Symmetry',['irt_summ','S']],
@@ -203,7 +212,7 @@ for instrument in open('instruments.txt', 'Ur').read().split():
         os.makedirs(web_dir)
 
     logging.basicConfig(
-        level=logging.INFO, 
+        level=logging.DEBUG, 
         filename=log,
         format='%(asctime)s|%(name)s|%(levelname)s|%(message)s',
         datefmt='%Y-%m-%d|%H:%M:%S')
@@ -214,7 +223,7 @@ for instrument in open('instruments.txt', 'Ur').read().split():
     logger.info("Making chart data for " + instrument)
 
     make_chart_data(data_dir, web_dir, instrument, description)
-    check_timepoints_for_outliers(web_dir, instrument, recipients)
+    #check_timepoints_for_outliers(web_dir, instrument, recipients)
 
     root = logging.getLogger()
     map(root.removeHandler, root.handlers[:])

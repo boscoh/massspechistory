@@ -28,23 +28,24 @@ def set_lower_limit_of_param(limit, params, name, logs, timepoints):
     times = []
     values = []
     for log in logs:
-        time = time_from_log(log)
-        times.append(time)
         try:
             value = get_param(log, params)
             values.append(value)
+            time = time_from_log(log)
+            times.append(time)
         except:
-            values.append(None)
+            pass
 
     try:
         # first pass, includes outliers
-        avg, std = datafile.get_avg_std(
-            [v for v in values if v != None])
+        avg_values = filter(lambda v: v != None, values)
+        avg, std = datafile.get_avg_std(avg_values)
 
         # remove outliers
         lower_limit = avg - std
-        avg, std = datafile.get_avg_std(
-            [v for v in values if v != None and v > lower_limit])
+        avg_values = filter(lambda v: v > lower_limit, avg_values)
+        avg, std = datafile.get_avg_std(avg_values)
+
     except:
         return
 
@@ -60,10 +61,12 @@ def set_lower_limit_of_param(limit, params, name, logs, timepoints):
         if value is None:
             timepoints[time][name] = False
         else:
-            timepoints[time][name] = value > limit[name]['lower_limit']
+            is_good = value > limit[name]['lower_limit']
+            timepoints[time][name] = is_good
 
 
 def sendmail(to_address, from_address, subject, body):
+    # Only run in a Linux enivornment
     sendmail = "/usr/sbin/sendmail"
     if not os.path.isfile(sendmail):
         return
@@ -75,30 +78,31 @@ def sendmail(to_address, from_address, subject, body):
     p.communicate(msg.as_string())
 
 
-def report_by_email(message, recipients=[]):
+def report_by_email(instrument, message, recipients=[]):
     logger.info('Sending outlier email to ' + ','.join(recipients))
     logger.debug(message)
     for recipient in recipients:
         sendmail(
             recipient, 
             'proteome@monash.edu', 
-            'Warning: QC for QEPLUS', 
+            'Warning: QC for %s' % instrument.upper(), 
             message)
 
 
-def bad_times_message(bad_times, timepoints, limit):
+def bad_times_message(instrument, bad_times, timepoints, limit):
     result = "Hi, \n\n"
-    result += "This is the automated QC for the QEPLUS.\n"
-    result += "Full report: http://monash.edu/proteomics/qc/qeplus/index.html.\n\n"
+    result += "This is the automated QC for the %s.\n" % instrument.upper()
+    result += "Full report: http://monash.edu/proteomics/qc/%s/index.html.\n\n" % instrument
     result += "Insufficent counts were encountered on:\n\n"
 
     for time in bad_times:
+        print type(time)
         result += " - %s:\n" % time.replace('T', ', ')
         for param in sorted(timepoints[time]):
             if not timepoints[time][param]:
                 result += "   - %s\n" % param
 
-    result = "\n\nThe reference counts ranges are:\n"
+    result += "\n\nThe reference counts ranges are:\n"
 
     for param in sorted(limit):
         result += " - %s\n" % param
