@@ -14,7 +14,11 @@ search against either an E. Coli or Human database.
 logger = logging.getLogger('process_raw_files')
 
 
+<<<<<<< HEAD
 for instrument in ['qeclassic', 'qeplus', 'qeplus2']:
+=======
+for instrument in open('instruments.txt', 'Ur').read().split():
+>>>>>>> abe455450250ca58d3b4fe7650581a92b28bc90f
     raw_files_dir = os.path.join('..', instrument, "instrument_data")
     results_dir = os.path.join('..', instrument)
     web_dir = os.path.join('..', instrument, 'web')

@@ -76,6 +76,29 @@ def calculate_crt(peptides):
         if peptide['RT'] and dRT:
             peptide['crt'] = (peptide['RT'] - cRT0) / dRT * 100
 
+def summarise_irt(log):
+#    print "Summarising iRT"
+    iRT_dict = {}
+    for l in ['R','T','O','B','D','S','W','N','C']:
+        iRT_dict[l]=0
+#    print iRT_dict
+#    print log['peptides'].keys()
+    for pep in log['peptides'].keys():
+#        print pep
+        if not log['peptides'][pep]['System Suitability']:
+#            print "No suitability found for: ",pep
+            continue
+#        print log['peptides'][pep].keys()
+        if 'Failed' in log['peptides'][pep]['System Suitability']:
+#            print "Found failed"
+            fs = log['peptides'][pep]['System Suitability'].split("; ")[-1].split()[1:]
+            for f in fs:
+                iRT_dict[f]+=1
+#    for k,v in iRT_dict.iteritems():   # use for removing 0 points
+#        if v==0:
+#            iRT_dict[k]=None
+#    print iRT_dict
+    return iRT_dict
 
 def parse_irt_log(fname):
     format_peptide_id = lambda i: 'pep_' + i[-1]
@@ -86,6 +109,7 @@ def parse_irt_log(fname):
         if line.startswith("Component Name "):
             tokens = line.split(';')
             params = line.strip().split(" ; ")[1:]
+#            print params
             continue
 
         if line.startswith("iRT-pep_"):
@@ -104,26 +128,28 @@ def parse_irt_log(fname):
                 else:
                     val = float(val)
                 peptide[param] = val
-
+#    print log['peptides']
+    log['irt_summ'] = summarise_irt(log)
     calculate_crt(log['peptides'])
-
+#    print log.keys()
     return log
-
 
 def parse_logs(fnames, parse_fn, cache_yaml):
     if os.path.isfile(cache_yaml):
         logs = datafile.load_yaml(cache_yaml)
     else:
         logs = []
-
     logs = filter(lambda log: 'fname' in log, logs)
     processed_fnames = [log['fname'] for log in logs]
+#    print processed_fnames
 
     for fname in fnames:
         if fname in processed_fnames:
+            print "processed",fname
             continue
-
+        print fname
         date = datafile.get_date_from_fname(fname)
+        print date
         if date is None:
             continue
 

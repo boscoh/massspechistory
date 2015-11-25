@@ -96,6 +96,7 @@ def bad_times_message(instrument, bad_times, timepoints, limit):
     result += "Insufficent counts were encountered on:\n\n"
 
     for time in bad_times:
+        print type(time)
         result += " - %s:\n" % time.replace('T', ', ')
         for param in sorted(timepoints[time]):
             if not timepoints[time][param]:

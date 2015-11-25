@@ -20,6 +20,7 @@ recipients = [
 ]
 
 
+
 logger = logging.getLogger('update_website')
 
 
@@ -122,13 +123,8 @@ def make_chart_data(data_dir, website_dir, title, description):
 
 
 def check_timepoints_for_outliers(website_dir, instrument, recipients=[]):
-<<<<<<< HEAD
-    if platform.system() == 'Windows':
-        return
-=======
 #    if platform.system() == 'Windows':
 #        return
->>>>>>> abe455450250ca58d3b4fe7650581a92b28bc90f
 
     timepoints_yaml = os.path.join(website_dir, 'timepoints.yaml')
     timepoints = datafile.load_cache_yaml(timepoints_yaml)
@@ -167,11 +163,8 @@ def check_timepoints_for_outliers(website_dir, instrument, recipients=[]):
             continue
         bad_params = [p for p in time_point if not time_point[p]]
         bad_pep_params = [p for p in bad_params if p.startswith("pep")]
-<<<<<<< HEAD
-=======
         print time,bad_params
         print time,bad_pep_params
->>>>>>> abe455450250ca58d3b4fe7650581a92b28bc90f
         if len(bad_pep_params) <= 3:
             # if only 3 or less irt peptides are bad,
             # consider okay and remove from bad_params
@@ -184,14 +177,9 @@ def check_timepoints_for_outliers(website_dir, instrument, recipients=[]):
     if bad_times:
         message = outliers.bad_times_message(
             instrument, bad_times, timepoints, limit)
-<<<<<<< HEAD
-        outliers.report_by_email(
-            instrument, message, recipients)
-=======
         print message
 #        outliers.report_by_email(
 #            instrument, message, recipients)
->>>>>>> abe455450250ca58d3b4fe7650581a92b28bc90f
 
     datafile.write_yaml(timepoints, timepoints_yaml)
 
@@ -199,22 +187,6 @@ def check_timepoints_for_outliers(website_dir, instrument, recipients=[]):
 
 # Main Loop
 
-<<<<<<< HEAD
-for instrument, description in [
-        ('qeclassic', 'Monash Proteomics Facility. Thermo QExactive'),
-        ('qeplus', 'Monash Proteomics Facility. Thermo QExactive Plus'),
-        ('qeplus2', 'Monash Proteomics Facility. Thermo QExactive Plus'),
-        ]:
-    data_dir = "../" + instrument
-    web_dir = "../%s/web" % instrument
-    log = "../%s/web/run.log" % instrument
-    recipients = [
-        'apposite@gmail.com', 
-        'oded.kleifeld@monash.edu', 
-        'robert.goode@monash.edu', 
-        'david.steer@monash.edu',
-   ]
-=======
 # automatically any directories that has instrument_data for processing
 for instrument in open('instruments.txt', 'Ur').read().split():
 
@@ -226,7 +198,6 @@ for instrument in open('instruments.txt', 'Ur').read().split():
     data_dir = "../" + instrument
     web_dir = "../%s/web" % instrument
     log = "../%s/web/run.log" % instrument
->>>>>>> abe455450250ca58d3b4fe7650581a92b28bc90f
 
     if not os.path.isdir(web_dir):
         os.makedirs(web_dir)

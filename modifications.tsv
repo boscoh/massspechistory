@@ -1,0 +1,3 @@
+Description	Type	Amino Acid Residue	Monoisotopic Mass Shift (Da)	Average Mass Shift (Da)	Default	Notes
+AlkC	amino acid residue	C	57.02146373	57.05132	fixed	CH3NO
+Ox	amino acid residue	M	15.99491463	15.9994	variable	O

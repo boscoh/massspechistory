@@ -5,7 +5,7 @@ import glob
 import logging
 import platform
 
-from massspechistory import chart
+from massspechistory import chart_iRTsumparse as chart
 from massspechistory import datafile
 from massspechistory import outliers
 
@@ -18,6 +18,7 @@ recipients = [
     'robert.goode@monash.edu', 
     'david.steer@monash.edu',
 ]
+
 
 
 logger = logging.getLogger('update_website')
@@ -81,9 +82,11 @@ def make_chart_data(data_dir, website_dir, title, description):
             r'(Hela|hela|ecoli).*iRT'),
         chart.parse_irt_log, 
         os.path.join(website_dir, 'irt_peptides.logs.yaml'))
+#    print logs
     if len(logs) > 0:
-#        print logs[0].keys()
+        print logs[0].keys()
         pep_ids = logs[0]['peptides'].keys()
+        print pep_ids
         charts.append(chart.make_chart(
             logs, 
             chart.make_pep_id_params(pep_ids, 'RT'), 
@@ -94,6 +97,13 @@ def make_chart_data(data_dir, website_dir, title, description):
             chart.make_pep_id_params(pep_ids, 'Height'), 
             'iRT Peptides Peak Height', 
             'Height of the peak associated at the retention time'))
+
+        # System Suitability summary
+        charts.append(chart.make_chart(
+            logs,
+             chart.make_pep_id_params(pep_ids,['System Suitability','Fail_pc']),
+             'System suitability failure (%)',
+             'Percent of failure of system suitability tests'))
         charts.append(chart.make_chart(
             logs,
             [['Symmetry',['irt_summ','S']],
@@ -122,13 +132,8 @@ def make_chart_data(data_dir, website_dir, title, description):
 
 
 def check_timepoints_for_outliers(website_dir, instrument, recipients=[]):
-<<<<<<< HEAD
-    if platform.system() == 'Windows':
-        return
-=======
 #    if platform.system() == 'Windows':
 #        return
->>>>>>> abe455450250ca58d3b4fe7650581a92b28bc90f
 
     timepoints_yaml = os.path.join(website_dir, 'timepoints.yaml')
     timepoints = datafile.load_cache_yaml(timepoints_yaml)
@@ -167,11 +172,8 @@ def check_timepoints_for_outliers(website_dir, instrument, recipients=[]):
             continue
         bad_params = [p for p in time_point if not time_point[p]]
         bad_pep_params = [p for p in bad_params if p.startswith("pep")]
-<<<<<<< HEAD
-=======
         print time,bad_params
         print time,bad_pep_params
->>>>>>> abe455450250ca58d3b4fe7650581a92b28bc90f
         if len(bad_pep_params) <= 3:
             # if only 3 or less irt peptides are bad,
             # consider okay and remove from bad_params
@@ -184,14 +186,9 @@ def check_timepoints_for_outliers(website_dir, instrument, recipients=[]):
     if bad_times:
         message = outliers.bad_times_message(
             instrument, bad_times, timepoints, limit)
-<<<<<<< HEAD
-        outliers.report_by_email(
-            instrument, message, recipients)
-=======
         print message
 #        outliers.report_by_email(
 #            instrument, message, recipients)
->>>>>>> abe455450250ca58d3b4fe7650581a92b28bc90f
 
     datafile.write_yaml(timepoints, timepoints_yaml)
 
@@ -199,22 +196,6 @@ def check_timepoints_for_outliers(website_dir, instrument, recipients=[]):
 
 # Main Loop
 
-<<<<<<< HEAD
-for instrument, description in [
-        ('qeclassic', 'Monash Proteomics Facility. Thermo QExactive'),
-        ('qeplus', 'Monash Proteomics Facility. Thermo QExactive Plus'),
-        ('qeplus2', 'Monash Proteomics Facility. Thermo QExactive Plus'),
-        ]:
-    data_dir = "../" + instrument
-    web_dir = "../%s/web" % instrument
-    log = "../%s/web/run.log" % instrument
-    recipients = [
-        'apposite@gmail.com', 
-        'oded.kleifeld@monash.edu', 
-        'robert.goode@monash.edu', 
-        'david.steer@monash.edu',
-   ]
-=======
 # automatically any directories that has instrument_data for processing
 for instrument in open('instruments.txt', 'Ur').read().split():
 
@@ -226,13 +207,12 @@ for instrument in open('instruments.txt', 'Ur').read().split():
     data_dir = "../" + instrument
     web_dir = "../%s/web" % instrument
     log = "../%s/web/run.log" % instrument
->>>>>>> abe455450250ca58d3b4fe7650581a92b28bc90f
 
     if not os.path.isdir(web_dir):
         os.makedirs(web_dir)
 
     logging.basicConfig(
-        level=logging.INFO, 
+        level=logging.DEBUG, 
         filename=log,
         format='%(asctime)s|%(name)s|%(levelname)s|%(message)s',
         datefmt='%Y-%m-%d|%H:%M:%S')
@@ -243,7 +223,7 @@ for instrument in open('instruments.txt', 'Ur').read().split():
     logger.info("Making chart data for " + instrument)
 
     make_chart_data(data_dir, web_dir, instrument, description)
-    check_timepoints_for_outliers(web_dir, instrument, recipients)
+    #check_timepoints_for_outliers(web_dir, instrument, recipients)
 
     root = logging.getLogger()
     map(root.removeHandler, root.handlers[:])
