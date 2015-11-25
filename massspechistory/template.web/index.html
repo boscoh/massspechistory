@@ -221,11 +221,14 @@
             });
         });
 
+        var google_data = 
+            google.visualization.arrayToDataTable(google_data);
+
         var chart = new google.visualization.LineChart(
             document.getElementById(selector));
 
         chart.draw(
-            google.visualization.arrayToDataTable(google_data), 
+            google_data, 
             {
                 title: '',
                 curveType: 'line',

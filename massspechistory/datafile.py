@@ -43,7 +43,10 @@ def load_yaml(cache_yaml):
 
 def load_cache_yaml(cache_yaml):
     if os.path.isfile(cache_yaml):
-        result = load_yaml(cache_yaml)
+        try:
+            result = load_yaml(cache_yaml)
+        except:
+            result = None
         if result is not None:
             return result
     return {}

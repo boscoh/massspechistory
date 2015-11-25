@@ -116,6 +116,7 @@ def parse_logs(fnames, parse_fn, cache_yaml):
     else:
         logs = []
 
+    logs = filter(lambda log: 'fname' in log, logs)
     processed_fnames = [log['fname'] for log in logs]
 
     for fname in fnames:
@@ -173,7 +174,10 @@ def make_chart(logs, params, title, description=''):
                 chart['values'].append([x, y])
             except:
                 pass
-        result['chart_data'].append(chart)
+        values = [pair[1] for pair in chart['values']]
+        values = filter(lambda v: v is not None, values)
+        if len(values) > 0:
+            result['chart_data'].append(chart)
     return result
 
 
